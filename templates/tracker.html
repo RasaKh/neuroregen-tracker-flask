@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block content %}
+
+<nav class="navbar navbar-dark bg-dark mb-4">
+  <div class="container-fluid px-4">
+    <span class="navbar-brand mb-0 h1">NeuroRegen Tracker</span>
+    <span>
+      <span class="navbar-text small text-white-50 me-3">ClinicalTrials.gov API v2 · live registry snapshot</span>
+      <a class="navbar-text small text-white-50" href="/">&larr; Rasa Khosrofar</a>
+    </span>
+  </div>
+</nav>
+
+<div class="container-fluid px-4 pb-5">
+  <div class="row">
+
+    <!-- Sidebar: filters, sticky so it stays in view while scrolling the table -->
+    <aside class="col-lg-3 mb-4">
+      <div class="card position-sticky" style="top: 1rem;">
+        <div class="card-header fw-semibold">Query</div>
+        <div class="card-body">
+
+          <label class="form-label small text-muted">Condition</label>
+          <select id="f-condition" class="form-select form-select-sm mb-3">
+            {% for c in conditions %}<option value="{{ c }}" {% if c == 'Spinal Cord Injuries' %}selected{% endif %}>{{ c }}</option>{% endfor %}
+          </select>
+
+          <label class="form-label small text-muted">Cell-type keyword</label>
+          <input type="text" id="f-keyword" class="form-control form-control-sm mb-3" value="stem cell">
+
+          <label class="form-label small text-muted d-block">Status</label>
+          <div class="mb-3" id="f-status">
+            {% for s in statuses %}
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" value="{{ s }}" id="status-{{ loop.index }}"
+                {% if s in ['RECRUITING','ACTIVE_NOT_RECRUITING','COMPLETED','NOT_YET_RECRUITING'] %}checked{% endif %}>
+              <label class="form-check-label small" for="status-{{ loop.index }}">{{ s.replace('_',' ').title() }}</label>
+            </div>
+            {% endfor %}
+          </div>
+
+          <label class="form-label small text-muted d-block">Phase</label>
+          <div class="mb-3" id="f-phase">
+            {% for p in phases %}
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" value="{{ p }}" id="phase-{{ loop.index }}"
+                {% if p in ['PHASE1','PHASE1|PHASE2','PHASE2','PHASE2|PHASE3','PHASE3'] %}checked{% endif %}>
+              <label class="form-check-label small" for="phase-{{ loop.index }}">{{ p }}</label>
+            </div>
+            {% endfor %}
+          </div>
+
+          <button id="run-btn" class="btn btn-primary btn-sm w-100">
+            <span>Update dashboard</span>
+          </button>
+          <div class="form-text mt-2">Snapshots are cached for 6 hours per query to respect the registry API.</div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main: stats, charts, table -->
+    <div class="col-lg-9">
+
+      <p class="text-muted mb-3" style="max-width: 720px;">
+        A recurring query against ClinicalTrials.gov, scoped to trials of stem-cell and cell-based interventions
+        in neurodegenerative and neurotraumatic conditions. Built as a monitoring companion for systematic review.
+      </p>
+
+      <div class="row row-cols-1 row-cols-md-4 g-3 mb-4">
+        <div class="col">
+          <div class="border rounded-3 p-3 h-100">
+            <div class="text-uppercase text-muted small">Trials matched</div>
+            <div class="fs-3 fw-bold" id="stat-total">–</div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="border rounded-3 p-3 h-100">
+            <div class="text-uppercase text-muted small">Recruiting</div>
+            <div class="fs-3 fw-bold" id="stat-recruiting">–</div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="border rounded-3 p-3 h-100">
+            <div class="text-uppercase text-muted small">Countries</div>
+            <div class="fs-3 fw-bold" id="stat-countries">–</div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="border rounded-3 p-3 h-100">
+            <div class="text-uppercase text-muted small">Snapshot</div>
+            <div class="fw-semibold small" id="fetched-at">fetching…</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-3 mb-4">
+        <div class="col-md-6">
+          <div class="card h-100">
+            <div class="card-header fw-semibold">Fig. 1 — Phase distribution</div>
+            <div class="card-body" style="height: 280px;"><canvas id="chart-phase"></canvas></div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card h-100">
+            <div class="card-header fw-semibold">Fig. 2 — Recruitment status</div>
+            <div class="card-body" style="height: 280px;"><canvas id="chart-status"></canvas></div>
+          </div>
+        </div>
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header fw-semibold">Fig. 3 — Registration timeline</div>
+            <div class="card-body" style="height: 260px;"><canvas id="chart-timeline"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span class="fw-semibold">Registry — matched studies</span>
+          <button id="csv-btn" class="btn btn-outline-secondary btn-sm">Export CSV</button>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-striped table-hover mb-0" id="trials-table">
+              <thead>
+                <tr>
+                  <th>NCT ID</th><th>Title</th><th>Status</th><th>Phase</th><th>Type</th><th>Country</th><th>Year</th>
+                </tr>
+              </thead>
+              <tbody id="trials-tbody"></tbody>
+            </table>
+          </div>
+          <div class="text-muted text-center py-4" id="table-empty" hidden>No trials match the current filters.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <footer class="text-muted small border-top pt-3 mt-4">
+    NeuroRegen Tracker — data via ClinicalTrials.gov API v2. Not a substitute for a documented systematic search.
+  </footer>
+</div>
+
+{% endblock %}

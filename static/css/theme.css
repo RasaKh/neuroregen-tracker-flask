@@ -1,0 +1,81 @@
+/* Shared palette — matches the portfolio page.
+   Loaded after Bootstrap so these rules win. */
+:root {
+  --navy: #1f3a5c;
+  --navy-deep: #17293f;
+  --navy-mid: #2a4059;
+  --brick: #8a3b34;
+  --line: #c7cbd1;
+}
+
+body { background: #f4f5f6; }
+
+/* Masthead */
+.navbar.bg-dark {
+  background-color: var(--navy) !important;
+  border-bottom: 3px solid #1c1e21;
+}
+.navbar.bg-dark .navbar-brand { color: #fff; }
+.navbar.bg-dark .navbar-text { color: #c9d4e0 !important; }
+
+/* Back-link in the masthead */
+.navbar.bg-dark a.navbar-text {
+  text-decoration: none;
+}
+.navbar.bg-dark a.navbar-text:hover { color: #fff !important; }
+
+/* Cards */
+.card-header {
+  background: #eef1f5;
+  border-bottom-color: var(--line);
+}
+.card { border-color: var(--line); }
+
+/* Primary actions in navy rather than Bootstrap blue */
+.btn-primary {
+  --bs-btn-bg: var(--navy);
+  --bs-btn-border-color: #1c1e21;
+  --bs-btn-hover-bg: var(--navy-deep);
+  --bs-btn-hover-border-color: #1c1e21;
+  --bs-btn-active-bg: var(--navy-deep);
+  --bs-btn-active-border-color: #1c1e21;
+  --bs-btn-disabled-bg: var(--navy);
+  --bs-btn-disabled-border-color: #1c1e21;
+}
+
+a { color: var(--navy); }
+a:hover { color: var(--brick); }
+
+/* Focus rings in navy, not default blue */
+.form-select:focus, .form-control:focus, .form-check-input:focus {
+  border-color: var(--navy-mid);
+  box-shadow: 0 0 0 .2rem rgba(31, 58, 92, .2);
+}
+.form-check-input:checked {
+  background-color: var(--navy);
+  border-color: var(--navy);
+}
+
+/* Status badges — muted institutional tones rather than saturated Bootstrap */
+.badge.text-bg-success { background-color: #eef1ea !important; color: #55684a !important; border: 1px solid #55684a; }
+.badge.text-bg-primary { background-color: #eef1f5 !important; color: var(--navy) !important; border: 1px solid var(--navy); }
+.badge.text-bg-danger  { background-color: #f6ebea !important; color: var(--brick) !important; border: 1px solid var(--brick); }
+.badge.text-bg-warning { background-color: #f7f2e4 !important; color: #7a6320 !important; border: 1px solid #7a6320; }
+.badge.text-bg-secondary { background-color: #f2f2f2 !important; color: #565b62 !important; border: 1px solid #9aa0a8; }
+
+
+/* Constrain page width so content does not span the full viewport
+   on wide displays. Matches the portfolio column. */
+.navbar > .container-fluid,
+body > .container-fluid {
+  max-width: 1080px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* The snapshot stat card can receive a long API error string.
+   Without this it forces horizontal overflow across the whole page. */
+#fetched-at {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
