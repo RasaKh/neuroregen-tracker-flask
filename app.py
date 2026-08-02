@@ -132,3 +132,43 @@ def get_trials(condition: str, keyword: str) -> dict:
     }
     _cache[key] = entry
     return entry
+
+
+@app.route("/")
+def index():
+    return render_template(
+        "index.html",
+        conditions=CONDITION_OPTIONS,
+        statuses=STATUS_OPTIONS,
+        phases=PHASE_OPTIONS,
+    )
+
+
+@app.route("/api/trials")
+def api_trials():
+    condition = request.args.get("condition", "Spinal Cord Injuries")
+    keyword = request.args.get("keyword", "stem cell")
+    statuses = request.args.getlist("status")
+    phases = request.args.getlist("phase")
+
+    try:
+        entry = get_trials(condition, keyword)
+    except requests.RequestException as exc:
+        return jsonify({"error": f"ClinicalTrials.gov request failed: {exc}"}), 502
+
+    records = entry["records"]
+    if statuses:
+        records = [r for r in records if r["status"] in statuses]
+    if phases:
+        records = [r for r in records if r["phase"] in phases]
+
+    return jsonify({
+        "records": records,
+        "count": len(records),
+        "fetched_at": entry["fetched_at_iso"],
+        "cache_ttl_seconds": CACHE_TTL_SECONDS,
+    })
+
+
+if __name__ == "__main__":
+    app.run(debug=True, port=5000)
