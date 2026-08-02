@@ -1,7 +1,7 @@
 # NeuroRegen Tracker — Flask app
 
 Live web dashboard version of the `neuroregen-tracker` notebook, built for deployment on a personal VPS/domain.
-
+(Live Viewable version: https://dr.khosrofar.me)
 ## Run locally
 
 ```bash
